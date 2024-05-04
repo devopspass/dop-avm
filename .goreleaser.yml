@@ -17,3 +17,7 @@ release:
   github:
     owner: devopspass
     name: dop-avm
+
+dockers:
+  - image_templates:
+      - devopspass/ansible
