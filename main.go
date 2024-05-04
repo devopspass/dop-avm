@@ -10,10 +10,13 @@ import (
 	"strings"
 
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/client"
 )
 
-func main() {
+const VERSION = "1.0.0"
+
+func runContainer() {
 	// Path to the current directory
 	currentDir, err := os.Getwd()
 	if err != nil {
@@ -30,6 +33,27 @@ func main() {
 
 	ctx := context.Background()
 	cli.NegotiateAPIVersion(ctx)
+
+	imageName := os.Getenv("DOP_AVM_IMAGE_NAME")
+	if imageName == "" {
+		imageName = "devopspass/ansible:latest"
+	}
+
+	// Check if the Docker image exists locally
+	_, _, err = cli.ImageInspectWithRaw(ctx, imageName)
+	if client.IsErrNotFound(err) {
+		// Image does not exist locally, pull it
+		fmt.Printf("Image %s not found locally, pulling...\n", imageName)
+		pullResp, err := cli.ImagePull(ctx, imageName, image.PullOptions{})
+		if err != nil {
+			fmt.Println("Error pulling Docker image:", err)
+			return
+		}
+		defer pullResp.Close()
+
+		// Stream the pull response if needed
+		io.Copy(os.Stdout, pullResp)
+	}
 
 	// Docker volume mappings
 	volumeMappings := []string{
@@ -77,6 +101,18 @@ func main() {
 		}
 	}
 
+	// SSH agent
+	switch runtime.GOOS {
+	case "windows", "darwin":
+		volumeMappings = append(volumeMappings, "/run/host-services/ssh-auth.sock:/run/host-services/ssh-auth.sock")
+		envs = append(envs, "SSH_AUTH_SOCK=/run/host-services/ssh-auth.sock")
+	default:
+		if os.Getenv("SSH_AUTH_SOCK") != "" {
+			volumeMappings = append(volumeMappings, fmt.Sprintf("%s:%s", os.Getenv("SSH_AUTH_SOCK"), "/tmp/ssh-auth.sock"))
+			envs = append(envs, "SSH_AUTH_SOCK=/tmp/ssh-auth.sock")
+		}
+	}
+
 	// Add GOOGLE_APPLICATION_CREDENTIALS volume if the environment variable is set
 	credentialsPath := os.Getenv("GOOGLE_APPLICATION_CREDENTIALS")
 	if credentialsPath == "" {
@@ -103,7 +139,7 @@ func main() {
 
 	// Create container options
 	config := &container.Config{
-		Image:        "dop-ansible:latest",
+		Image:        imageName,
 		Cmd:          append([]string{binaryName}, os.Args[1:]...),
 		Env:          envs,
 		Tty:          true,
@@ -118,7 +154,13 @@ func main() {
 	// Create the container
 	resp, err := cli.ContainerCreate(ctx, config, hostConfig, nil, nil, "ansible")
 	if err != nil {
-		fmt.Println("Error creating Docker container:", err)
+		// Check if the error is due to Docker not running
+		if client.IsErrConnectionFailed(err) {
+			fmt.Println("ERROR: DOP Ansible Version Manager relies on Docker, so please ensure that it's installed and running.")
+			fmt.Println("Error creating Docker container:", err)
+		} else {
+			fmt.Println("Error creating Docker container:", err)
+		}
 		return
 	}
 
@@ -151,6 +193,29 @@ func main() {
 	}
 }
 
+func printHelp() {
+	fmt.Printf("DevOps Pass AI - Ansible Version Manager v%s", VERSION)
+	fmt.Println("Run 'dop-avm setup' to setup Ansible binaries.")
+}
+
+func main() {
+	currentBinaryPath, err := os.Executable()
+	if err != nil {
+		fmt.Printf("Error getting current binary path: %v", err)
+		return
+	}
+
+	if strings.HasSuffix(currentBinaryPath, "dop-avm") || strings.HasSuffix(currentBinaryPath, "dop-avm.exe") {
+		if len(os.Args) > 1 && os.Args[1] == "setup" {
+			copyBinaryToNames()
+		} else {
+			printHelp()
+		}
+	} else {
+		runContainer()
+	}
+}
+
 // Function to get the home directory
 func getHomeDir() string {
 	home, err := os.UserHomeDir()
@@ -159,4 +224,73 @@ func getHomeDir() string {
 		os.Exit(1)
 	}
 	return home
+}
+
+func copyBinaryToNames() error {
+	// Get the path to the current binary
+	currentBinaryPath, err := os.Executable()
+	if err != nil {
+		return fmt.Errorf("error getting current binary path: %v", err)
+	}
+
+	// Determine the target file names
+	targetNames := []string{
+		"ansible",
+		"ansible-playbook",
+		"ansible-galaxy",
+		"ansible-vault",
+		"ansible-doc",
+		"ansible-config",
+		"ansible-console",
+		"ansible-inventory",
+		"ansible-adhoc",
+		"ansible-lint",
+		"molecule",
+	}
+
+	// Append ".exe" for Windows
+	if runtime.GOOS == "windows" {
+		for i, name := range targetNames {
+			targetNames[i] = name + ".exe"
+		}
+	}
+
+	// Copy the binary to each target name
+	for _, name := range targetNames {
+		targetPath := filepath.Join(".", name)
+		if err := copyFile(currentBinaryPath, targetPath); err != nil {
+			return fmt.Errorf("error copying binary to %s: %v", targetPath, err)
+		}
+		fmt.Printf("Binary copied to %s\n", targetPath)
+		// Set executable permission for macOS and Linux
+		if runtime.GOOS != "windows" {
+			if err := os.Chmod(targetPath, 0755); err != nil {
+				return fmt.Errorf("error setting executable permission for %s: %v", targetPath, err)
+			}
+			fmt.Printf("Executable permission set for %s\n", targetPath)
+		}
+	}
+
+	return nil
+}
+
+func copyFile(src, dst string) error {
+	sourceFile, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer sourceFile.Close()
+
+	destinationFile, err := os.Create(dst)
+	if err != nil {
+		return err
+	}
+	defer destinationFile.Close()
+
+	_, err = io.Copy(destinationFile, sourceFile)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
