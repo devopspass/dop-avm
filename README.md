@@ -1,17 +1,46 @@
-# dop-avm
+# DOP Ansible Version Manager
 
-DOP Ansible Version Manager
+<!-- ⚠️ This README has been generated from the file(s) "blueprint.md" ⚠️--><p align="center">
+  <img src="https://static.wixstatic.com/media/09a6dd_eae6b87971dd4d14ba7792cdd237dd76~mv2.png" alt="Logo" width="300" height="auto" />
+</p>
+<p align="center">
+		<a href="https://github.com/devopspass/dop-avm"><img alt="Release" src="https://img.shields.io/github/release/devopspass/dop-avm.svg" height="20"/></a>
+<a href=""><img alt="Downloads" src="https://img.shields.io/github/downloads/devopspass/dop-avm/total" height="20"/></a>
+<a href="https://medium.com/@devopspass/"><img alt="Medium" src="https://img.shields.io/badge/Medium-12100E?style=for-the-badge&logo=medium&logoColor=white" height="20"/></a>
+<a href="https://dev.to/devopspass"><img alt="dev.to" src="https://img.shields.io/badge/dev.to-0A0A0A?style=for-the-badge&logo=devdotto&logoColor=white" height="20"/></a>
+<a href="https://www.linkedin.com/company/devopspass-ai"><img alt="LinkedIn" src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white" height="20"/></a>
+<a href="https://www.youtube.com/@DevOpsPassAI"><img alt="YouTube" src="https://img.shields.io/badge/YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white" height="20"/></a>
+<a href="https://twitter.com/devops_pass_ai"><img alt="Twitter" src="https://img.shields.io/badge/Twitter-1DA1F2?style=for-the-badge&logo=twitter&logoColor=white" height="20"/></a>
+	</p>
 
-## Why?
+<p align="center">
+  <b>Run Ansible anywhere, using Docker</b></br>
+  <sub>Run Ansible on Windows, MacOS and Linux via Docker.<sub>
+</p>
 
-As part of DevOps Pass AI project we needed integration for Ansible, which will work on all platforms in the same way including Windows, MacOS and Linux.
+<br />
+
+
+
+[![-----------------------------------------------------](https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/water.png)](#-join-community)
+
+## 💬 Join community
+
+Join our Slack community, ask questions, contribute, get help!
+
+[<img src="https://cloudberrydb.org/assets/images/slack_button-7610f9c51d82009ad912aded124c2d88.svg" width="150">](https://join.slack.com/t/devops-pass-ai/shared_invite/zt-2gyn62v9f-5ORKktUINe43qJx7HtKFcw)
+
+
+## 🧐 Why?
+
+As part of [DevOps Pass AI](https://github.com/devopspass/devopspass/) project we needed integration for Ansible, which will work on all platforms in the same way, including Windows, MacOS and Linux.
 As you probably know Ansible is not suported natively on Windows - https://docs.ansible.com/ansible/latest/os_guide/windows_faq.html#can-ansible-run-on-windows
 
 Inspired by [tofuutils/tenv](https://github.com/tofuutils/tenv) been created DOP-AVM (DevOps Pass AI Ansible Version Manager).
 
 It uses Docker under the hood and allowing you to run Ansible tools from your local without installation of Python and on Windows.
 
-## Installation
+## 🚀 Installation
 
 ### MacOS / Linux
 
