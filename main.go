@@ -136,6 +136,9 @@ func runContainer() {
 
 	// Get the program binary name
 	binaryName := filepath.Base(os.Args[0])
+	if runtime.GOOS == "windows" {
+		binaryName = strings.Replace(binaryName, ".exe", "", -1)
+	}
 
 	// Create container options
 	config := &container.Config{
