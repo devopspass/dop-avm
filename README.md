@@ -64,5 +64,50 @@ md %USERPROFILE%\bin
 move dop-avm.exe %USERPROFILE%\bin\
 setx PATH "%USERPROFILE%\bin;%PATH%"
 
+cd %USERPROFILE%\bin\
 dop-avm setup
 ```
+
+### DevOps Pass AI
+
+In DOP you can add **Ansible** app and run action **Install Ansible Version Manager**, it will download and install `dop-avm`.
+
+## 🤔 How it works?
+
+`dop-avm` copying own binary with different names, which will be used later by user:
+
+* ansible
+* ansible-playbook
+* ansible-galaxy
+* ansible-vault
+* ansible-doc
+* ansible-config
+* ansible-console
+* ansible-inventory
+* ansible-adhoc
+* ansible-lint
+* molecule
+
+When you're running any of this command, it will run Docker container `devopspass/ansible:latest` and binary inside (source Dockerfile in repo).
+
+AVM will pass environment variables from host machine:
+
+* `ANSIBLE_*`
+* `MOLECULE_*`
+* `GALAXY_*`
+* `AWS_*`
+* `GOOGLE_APPLICATION_CREDENTIALS`
+
+Plus volumes (if exist):
+
+* `.ssh`
+* `.aws`
+* `.azure`
+* `.ansible`
+
+And services, like SSH-agent and Docker socket.
+As a result you can run Ansible on Windows, MacOS and Linux via Docker without installation of Python and Ansible on your local, especially it's useful for Windows where it's not possible to run Ansible at all.
+
+## 🐳 Use another Docker container
+
+Probably you may have Docker container built in your organization, which is used in pipelines or recommended for local, you can use it by specifying `DOP_AVM_IMAGE_NAME` environment variable. Be sure that all necessary binaries, like `molecule` are inside, when you're running it.
